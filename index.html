@@ -1,0 +1,948 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Telegram Bot Menejeri</title>
+    <style>
+        :root {
+            --primary: #4361ee;
+            --secondary: #3f37c9;
+            --success: #4cc9f0;
+            --danger: #f72585;
+            --light: #f8f9fa;
+            --dark: #212529;
+            --gray: #6c757d;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: var(--dark);
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            color: white;
+        }
+        
+        header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+        
+        header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+        
+        .dashboard {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        
+        @media (max-width: 768px) {
+            .dashboard {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            transition: transform 0.3s ease;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .card-header {
+            background: var(--primary);
+            color: white;
+            padding: 15px 20px;
+            font-size: 1.2rem;
+            font-weight: 600;
+        }
+        
+        .card-body {
+            padding: 20px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: var(--dark);
+        }
+        
+        input, textarea, select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border 0.3s;
+        }
+        
+        input:focus, textarea:focus, select:focus {
+            border-color: var(--primary);
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.2);
+        }
+        
+        textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+        
+        .btn {
+            display: inline-block;
+            padding: 12px 25px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: center;
+        }
+        
+        .btn:hover {
+            background: var(--secondary);
+            transform: translateY(-2px);
+        }
+        
+        .btn-block {
+            display: block;
+            width: 100%;
+        }
+        
+        .btn-success {
+            background: var(--success);
+        }
+        
+        .btn-danger {
+            background: var(--danger);
+        }
+        
+        .status-container {
+            max-height: 400px;
+            overflow-y: auto;
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 15px;
+            font-family: monospace;
+            font-size: 0.9rem;
+            line-height: 1.5;
+        }
+        
+        .status-item {
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+            animation: fadeIn 0.5s;
+        }
+        
+        .status-item:last-child {
+            border-bottom: none;
+        }
+        
+        .status-item.success {
+            border-left: 4px solid var(--success);
+        }
+        
+        .status-item.error {
+            border-left: 4px solid var(--danger);
+        }
+        
+        .status-item.info {
+            border-left: 4px solid var(--primary);
+        }
+        
+        .bot-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .bot-card {
+            background: white;
+            border-radius: 8px;
+            padding: 15px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+            border-top: 4px solid var(--primary);
+        }
+        
+        .bot-name {
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+        
+        .bot-status {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            margin-bottom: 10px;
+        }
+        
+        .status-running {
+            background: rgba(76, 201, 240, 0.2);
+            color: var(--success);
+        }
+        
+        .status-stopped {
+            background: rgba(247, 37, 133, 0.2);
+            color: var(--danger);
+        }
+        
+        .bot-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .bot-actions .btn {
+            padding: 6px 12px;
+            font-size: 0.8rem;
+            flex: 1;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        .tabs {
+            display: flex;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        .tab {
+            padding: 10px 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .tab.active {
+            border-bottom: 3px solid var(--primary);
+            color: var(--primary);
+            font-weight: 600;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .loader {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+            margin-right: 10px;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .hidden {
+            display: none;
+        }
+        
+        .alert {
+            padding: 12px 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
+        
+        .alert-success {
+            background: rgba(76, 201, 240, 0.2);
+            border: 1px solid var(--success);
+            color: var(--success);
+        }
+        
+        .alert-error {
+            background: rgba(247, 37, 133, 0.2);
+            border: 1px solid var(--danger);
+            color: var(--danger);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Telegram Bot Menejeri</h1>
+            <p>Sun'iy intellekt bilan integratsiyalashgan Telegram botlaringizni yarating va boshqaring</p>
+        </header>
+        
+        <div class="tabs">
+            <div class="tab active" data-tab="create">Bot Yaratish</div>
+            <div class="tab" data-tab="manage">Botlarni Boshqarish</div>
+            <div class="tab" data-tab="status">Status va Loglar</div>
+        </div>
+        
+        <div class="dashboard">
+            <!-- Bot Yaratish Tab -->
+            <div class="tab-content active" id="create-tab">
+                <div class="card">
+                    <div class="card-header">Yangi Bot Yaratish</div>
+                    <div class="card-body">
+                        <form id="botForm">
+                            <div class="form-group">
+                                <label for="email">Elektron Pochta</label>
+                                <input type="email" id="email" name="email" required>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="password">Parol</label>
+                                <input type="password" id="password" name="password" required>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="bot_name">Bot Nomi</label>
+                                <input type="text" id="bot_name" name="bot_name" required>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="telegram_token">Telegram Bot Tokeni</label>
+                                <input type="text" id="telegram_token" name="telegram_token" required placeholder="123456789:ABCdefGHIjklMNOpqrsTUVwxyz">
+                                <small>Buni Telegramdagi @BotFather dan oling</small>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="ai_provider">Sun'iy Intellekt Provayderi</label>
+                                <select id="ai_provider" name="ai_provider">
+                                    <option value="openai">OpenAI</option>
+                                    <option value="custom">Maxsus API</option>
+                                </select>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="ai_keys">Sun'iy Intellekt Konfiguratsiyasi (JSON)</label>
+                                <textarea id="ai_keys" name="ai_keys" placeholder='{"openai": "sizning-api-kalitingiz"}'></textarea>
+                            </div>
+                            
+                            <button type="submit" class="btn btn-block" id="createBotBtn">
+                                <span class="btn-text">Bot Yaratish</span>
+                                <div class="loader hidden" id="createLoader"></div>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <div class="card-header">Bot Ma'lumotlari</div>
+                    <div class="card-body">
+                        <h3>Telegram Bot Tokenini qanday olish kerak:</h3>
+                        <ol>
+                            <li>Telegram oching va <strong>@BotFather</strong> ni qidiring</li>
+                            <li><code>/newbot</code> buyrug'ini yuboring</li>
+                            <li>Bot nomini va username'ini kiriting</li>
+                            <li>BotFather bergan tokenni nusxalang</li>
+                            <li>Tokenni yuqoridagi formaga joylang</li>
+                        </ol>
+                        
+                        <h3>Sun'iy Intellekt Konfiguratsiyasi:</h3>
+                        <p>OpenAI uchun JSON quyidagicha bo'ladi:</p>
+                        <pre>{
+  "openai": "sk-sizning-api-kalitingiz"
+}</pre>
+                        
+                        <p>Maxsus API lar uchun endpoint va kalitlarni kiriting:</p>
+                        <pre>{
+  "endpoint": "https://api.misol.com/chat",
+  "api_key": "sizning-api-kalitingiz",
+  "model": "gpt-3.5-turbo"
+}</pre>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Botlarni Boshqarish Tab -->
+            <div class="tab-content" id="manage-tab">
+                <div class="card">
+                    <div class="card-header">Sizning Botlaringiz</div>
+                    <div class="card-body">
+                        <div class="bot-list" id="botList">
+                            <!-- Bot kartalari dinamik ravishda qo'shiladi -->
+                            <div class="no-bots" id="noBotsMessage">
+                                <p>Hali hech qanday bot yaratilmagan. Boshlash uchun "Bot Yaratish" bo'limiga o'ting.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <div class="card-header">Bot Harakatlari</div>
+                    <div class="card-body">
+                        <div class="form-group">
+                            <label for="selectedBot">Botni Tanlang</label>
+                            <select id="selectedBot">
+                                <option value="">-- Botni tanlang --</option>
+                            </select>
+                        </div>
+                        
+                        <div class="bot-actions">
+                            <button class="btn btn-success" id="startBotBtn">Ishga Tushirish</button>
+                            <button class="btn" id="restartBotBtn">Qayta Ishga Tushirish</button>
+                            <button class="btn btn-danger" id="stopBotBtn">To'xtatish</button>
+                            <button class="btn btn-danger" id="deleteBotBtn">O'chirish</button>
+                        </div>
+                        
+                        <div class="form-group" style="margin-top: 20px;">
+                            <label for="updateAiKeys">Sun'iy Intellekt Kalitlarini Yangilash (JSON)</label>
+                            <textarea id="updateAiKeys" placeholder='{"openai": "yangi-api-kalit"}'></textarea>
+                            <button class="btn" id="updateKeysBtn" style="margin-top: 10px;">Kalitlarni Yangilash</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Status va Loglar Tab -->
+            <div class="tab-content" id="status-tab">
+                <div class="card">
+                    <div class="card-header">Real vaqt Statusi</div>
+                    <div class="card-body">
+                        <div class="status-container" id="statusContainer">
+                            <div class="status-item info">
+                                <strong>Tizim:</strong> Dashboard ulandi. Bot faolligini kutyapmiz...
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <div class="card-header">Bot Statistikasi</div>
+                    <div class="card-body">
+                        <div class="stats">
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 15px;">
+                                <div>
+                                    <h3>Jami Botlar</h3>
+                                    <p id="totalBots">0</p>
+                                </div>
+                                <div>
+                                    <h3>Ishlayotgan</h3>
+                                    <p id="runningBots">0</p>
+                                </div>
+                                <div>
+                                    <h3>To'xtatilgan</h3>
+                                    <p id="stoppedBots">0</p>
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <h3>Oxirgi Faollik</h3>
+                                <div id="recentActivity">
+                                    <p>Hozircha faollik yo'q</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // API endpointlari
+        const API_BASE_URL = 'http://localhost:3000'; // Backend manzilingizni o'zgartiring
+        
+        const API_ENDPOINTS = {
+            CREATE_BOT: `${API_BASE_URL}/create-bot`,
+            GET_BOTS: `${API_BASE_URL}/bots`,
+            START_BOT: (botId) => `${API_BASE_URL}/bots/${botId}/start`,
+            STOP_BOT: (botId) => `${API_BASE_URL}/bots/${botId}/stop`,
+            RESTART_BOT: (botId) => `${API_BASE_URL}/bots/${botId}/restart`,
+            DELETE_BOT: (botId) => `${API_BASE_URL}/bots/${botId}`,
+            UPDATE_KEYS: (botId) => `${API_BASE_URL}/bots/${botId}/keys`
+        };
+
+        // Tab almashtirish funksiyasi
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                // Barcha tab va kontentlardan active klassini olib tashlash
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                
+                // Bosilgan tab va mos kontentga active klassini qo'shish
+                tab.classList.add('active');
+                const tabId = tab.getAttribute('data-tab');
+                document.getElementById(`${tabId}-tab`).classList.add('active');
+                
+                // Agar "Botlarni Boshqarish" tabi bosilsa, botlarni yuklash
+                if (tabId === 'manage') {
+                    loadBots();
+                }
+            });
+        });
+        
+        // Form yuborish
+        document.getElementById('botForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const createBtn = document.getElementById('createBotBtn');
+            const loader = document.getElementById('createLoader');
+            const btnText = createBtn.querySelector('.btn-text');
+            
+            // Yuklanish holatini ko'rsatish
+            btnText.textContent = 'Bot Yaratilmoqda...';
+            loader.classList.remove('hidden');
+            createBtn.disabled = true;
+            
+            // Form ma'lumotlarini yig'ish
+            const formData = {
+                email: document.getElementById('email').value,
+                password: document.getElementById('password').value,
+                bot_name: document.getElementById('bot_name').value,
+                telegram_token: document.getElementById('telegram_token').value,
+                ai_provider: document.getElementById('ai_provider').value,
+                ai_keys: document.getElementById('ai_keys').value ? JSON.parse(document.getElementById('ai_keys').value) : {}
+            };
+            
+            try {
+                // Backend API ga so'rov
+                const response = await fetch(API_ENDPOINTS.CREATE_BOT, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(formData)
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok && result.ok) {
+                    addStatusMessage('success', `Bot "${formData.bot_name}" muvaffaqiyatli yaratildi! Bot ID: ${result.botId}`);
+                    document.getElementById('botForm').reset();
+                    
+                    // Bot ro'yxatiga qo'shish
+                    addBotToList({
+                        id: result.botId,
+                        name: formData.bot_name,
+                        status: 'running'
+                    });
+                    
+                    // Statistika yangilash
+                    updateStatistics();
+                } else {
+                    addStatusMessage('error', `Xato: ${result.error || 'Noma\'lum xato'}`);
+                }
+            } catch (error) {
+                addStatusMessage('error', `Tarmoq xatosi: ${error.message}`);
+            } finally {
+                // Tugma holatini tiklash
+                btnText.textContent = 'Bot Yaratish';
+                loader.classList.add('hidden');
+                createBtn.disabled = false;
+            }
+        });
+        
+        // Bot boshqarish tugmalari
+        document.getElementById('startBotBtn').addEventListener('click', () => {
+            const selectedBot = document.getElementById('selectedBot').value;
+            if (!selectedBot) {
+                alert('Iltimos, avval botni tanlang');
+                return;
+            }
+            
+            startBot(selectedBot);
+        });
+        
+        document.getElementById('restartBotBtn').addEventListener('click', () => {
+            const selectedBot = document.getElementById('selectedBot').value;
+            if (!selectedBot) {
+                alert('Iltimos, avval botni tanlang');
+                return;
+            }
+            
+            restartBot(selectedBot);
+        });
+        
+        document.getElementById('stopBotBtn').addEventListener('click', () => {
+            const selectedBot = document.getElementById('selectedBot').value;
+            if (!selectedBot) {
+                alert('Iltimos, avval botni tanlang');
+                return;
+            }
+            
+            stopBot(selectedBot);
+        });
+        
+        document.getElementById('deleteBotBtn').addEventListener('click', () => {
+            const selectedBot = document.getElementById('selectedBot').value;
+            if (!selectedBot) {
+                alert('Iltimos, avval botni tanlang');
+                return;
+            }
+            
+            if (confirm('Haqiqatan ham bu botni o\'chirmoqchimisiz? Bu amalni bekor qilib bo\'lmaydi.')) {
+                deleteBot(selectedBot);
+            }
+        });
+        
+        document.getElementById('updateKeysBtn').addEventListener('click', () => {
+            const selectedBot = document.getElementById('selectedBot').value;
+            const newKeys = document.getElementById('updateAiKeys').value;
+            
+            if (!selectedBot) {
+                alert('Iltimos, avval botni tanlang');
+                return;
+            }
+            
+            if (!newKeys) {
+                alert('Iltimos, yangi AI kalitlarini kiriting');
+                return;
+            }
+            
+            try {
+                JSON.parse(newKeys); // JSON ni tekshirish
+                updateBotKeys(selectedBot, newKeys);
+            } catch (e) {
+                alert('Noto\'g\'ri JSON format');
+            }
+        });
+        
+        // Status konteyneri avtomatik skroll
+        const statusContainer = document.getElementById('statusContainer');
+        statusContainer.scrollTop = statusContainer.scrollHeight;
+        
+        // WebSocket ulanishi (real loyihada backend ga ulanadi)
+        function connectWebSocket() {
+            const ws = new WebSocket('ws://localhost:3000'); // Backend WebSocket manzili
+            
+            ws.onopen = () => {
+                addStatusMessage('success', 'Real vaqt ulanishi muvaffaqiyatli o\'rnatildi');
+            };
+            
+            ws.onmessage = (event) => {
+                const data = JSON.parse(event.data);
+                handleWebSocketMessage(data);
+            };
+            
+            ws.onerror = (error) => {
+                addStatusMessage('error', `WebSocket xatosi: ${error.message}`);
+            };
+            
+            ws.onclose = () => {
+                addStatusMessage('info', 'Real vaqt ulanishi uzildi. Qayta ulanmoqda...');
+                setTimeout(connectWebSocket, 5000);
+            };
+        }
+        
+        // WebSocket xabarlarini qayta ishlash
+        function handleWebSocketMessage(data) {
+            if (data.bot && data.msg) {
+                addStatusMessage('info', `<strong>${getBotName(data.bot)}:</strong> Foydalanuvchi so'rovi: "${data.msg}"`);
+                
+                if (data.resp) {
+                    setTimeout(() => {
+                        addStatusMessage('success', `<strong>${getBotName(data.bot)}:</strong> Javob: "${data.resp}"`);
+                    }, 1000);
+                }
+            } else if (data.error) {
+                addStatusMessage('error', `<strong>${getBotName(data.bot)}:</strong> Xato: ${data.error}`);
+            }
+        }
+        
+        // API funksiyalari
+        async function loadBots() {
+            try {
+                const response = await fetch(API_ENDPOINTS.GET_BOTS);
+                if (response.ok) {
+                    const bots = await response.json();
+                    displayBots(bots);
+                } else {
+                    addStatusMessage('error', 'Botlarni yuklab bo\'lmadi');
+                }
+            } catch (error) {
+                addStatusMessage('error', `Botlarni yuklash xatosi: ${error.message}`);
+            }
+        }
+        
+        async function startBot(botId) {
+            try {
+                const response = await fetch(API_ENDPOINTS.START_BOT(botId), {
+                    method: 'POST'
+                });
+                
+                if (response.ok) {
+                    updateBotStatus(botId, 'running');
+                    addStatusMessage('success', `Bot muvaffaqiyatli ishga tushirildi`);
+                } else {
+                    addStatusMessage('error', 'Botni ishga tushirib bo\'lmadi');
+                }
+            } catch (error) {
+                addStatusMessage('error', `Ishga tushirish xatosi: ${error.message}`);
+            }
+        }
+        
+        async function stopBot(botId) {
+            try {
+                const response = await fetch(API_ENDPOINTS.STOP_BOT(botId), {
+                    method: 'POST'
+                });
+                
+                if (response.ok) {
+                    updateBotStatus(botId, 'stopped');
+                    addStatusMessage('info', `Bot to'xtatildi`);
+                } else {
+                    addStatusMessage('error', 'Botni to\'xtatib bo\'lmadi');
+                }
+            } catch (error) {
+                addStatusMessage('error', `To'xtatish xatosi: ${error.message}`);
+            }
+        }
+        
+        async function restartBot(botId) {
+            try {
+                const response = await fetch(API_ENDPOINTS.RESTART_BOT(botId), {
+                    method: 'POST'
+                });
+                
+                if (response.ok) {
+                    addStatusMessage('info', `Bot qayta ishga tushirilmoqda...`);
+                    setTimeout(() => {
+                        updateBotStatus(botId, 'running');
+                        addStatusMessage('success', `Bot muvaffaqiyatli qayta ishga tushirildi`);
+                    }, 2000);
+                } else {
+                    addStatusMessage('error', 'Botni qayta ishga tushirib bo\'lmadi');
+                }
+            } catch (error) {
+                addStatusMessage('error', `Qayta ishga tushirish xatosi: ${error.message}`);
+            }
+        }
+        
+        async function deleteBot(botId) {
+            try {
+                const response = await fetch(API_ENDPOINTS.DELETE_BOT(botId), {
+                    method: 'DELETE'
+                });
+                
+                if (response.ok) {
+                    removeBotFromList(botId);
+                    addStatusMessage('info', `Bot o'chirildi`);
+                } else {
+                    addStatusMessage('error', 'Botni o\'chirib bo\'lmadi');
+                }
+            } catch (error) {
+                addStatusMessage('error', `O'chirish xatosi: ${error.message}`);
+            }
+        }
+        
+        async function updateBotKeys(botId, keys) {
+            try {
+                const response = await fetch(API_ENDPOINTS.UPDATE_KEYS(botId), {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: keys
+                });
+                
+                if (response.ok) {
+                    addStatusMessage('success', `AI kalitlari muvaffaqiyatli yangilandi`);
+                    document.getElementById('updateAiKeys').value = '';
+                } else {
+                    addStatusMessage('error', 'Kalitlarni yangilab bo\'lmadi');
+                }
+            } catch (error) {
+                addStatusMessage('error', `Yangilash xatosi: ${error.message}`);
+            }
+        }
+        
+        // Yordamchi funksiyalar
+        function addStatusMessage(type, message) {
+            const statusContainer = document.getElementById('statusContainer');
+            const statusItem = document.createElement('div');
+            statusItem.className = `status-item ${type}`;
+            
+            const timestamp = new Date().toLocaleTimeString();
+            statusItem.innerHTML = `<strong>[${timestamp}]</strong> ${message}`;
+            
+            statusContainer.appendChild(statusItem);
+            statusContainer.scrollTop = statusContainer.scrollHeight;
+            
+            // Oxirgi faollikni yangilash
+            updateRecentActivity(message);
+        }
+        
+        function displayBots(bots) {
+            const botList = document.getElementById('botList');
+            const noBotsMessage = document.getElementById('noBotsMessage');
+            const select = document.getElementById('selectedBot');
+            
+            // Tozalash
+            botList.innerHTML = '';
+            select.innerHTML = '<option value="">-- Botni tanlang --</option>';
+            
+            if (bots.length === 0) {
+                noBotsMessage.style.display = 'block';
+                return;
+            }
+            
+            noBotsMessage.style.display = 'none';
+            
+            bots.forEach(bot => {
+                addBotToList(bot);
+            });
+            
+            updateStatistics();
+        }
+        
+        function addBotToList(bot) {
+            const noBotsMessage = document.getElementById('noBotsMessage');
+            if (noBotsMessage) {
+                noBotsMessage.style.display = 'none';
+            }
+            
+            const botList = document.getElementById('botList');
+            const botCard = document.createElement('div');
+            botCard.className = 'bot-card';
+            botCard.setAttribute('data-bot-id', bot.id);
+            
+            botCard.innerHTML = `
+                <div class="bot-name">${bot.name}</div>
+                <div class="bot-status status-${bot.status}">${bot.status === 'running' ? 'ishlayapti' : 'to\'xtatilgan'}</div>
+                <div class="bot-id">ID: ${bot.id}</div>
+                <div class="bot-created">Yaratilgan: ${new Date(bot.created_at).toLocaleDateString('uz-UZ')}</div>
+            `;
+            
+            botList.appendChild(botCard);
+            
+            // Select dropdown ga qo'shish
+            const select = document.getElementById('selectedBot');
+            const option = document.createElement('option');
+            option.value = bot.id;
+            option.textContent = `${bot.name} (${bot.id})`;
+            select.appendChild(option);
+        }
+        
+        function removeBotFromList(botId) {
+            const botCard = document.querySelector(`.bot-card[data-bot-id="${botId}"]`);
+            if (botCard) {
+                botCard.remove();
+            }
+            
+            const option = document.querySelector(`#selectedBot option[value="${botId}"]`);
+            if (option) {
+                option.remove();
+            }
+            
+            updateStatistics();
+        }
+        
+        function updateBotStatus(botId, status) {
+            const botCard = document.querySelector(`.bot-card[data-bot-id="${botId}"]`);
+            if (botCard) {
+                const statusElement = botCard.querySelector('.bot-status');
+                statusElement.textContent = status === 'running' ? 'ishlayapti' : 'to\'xtatilgan';
+                statusElement.className = `bot-status status-${status}`;
+            }
+            
+            updateStatistics();
+        }
+        
+        function updateStatistics() {
+            const bots = document.querySelectorAll('.bot-card');
+            const runningBots = document.querySelectorAll('.status-running').length;
+            
+            document.getElementById('totalBots').textContent = bots.length;
+            document.getElementById('runningBots').textContent = runningBots;
+            document.getElementById('stoppedBots').textContent = bots.length - runningBots;
+        }
+        
+        function updateRecentActivity(message) {
+            const recentActivity = document.getElementById('recentActivity');
+            const activityItem = document.createElement('div');
+            activityItem.className = 'status-item info';
+            activityItem.style.marginBottom = '10px';
+            activityItem.style.padding = '8px';
+            activityItem.style.fontSize = '0.9rem';
+            
+            const timestamp = new Date().toLocaleTimeString();
+            activityItem.innerHTML = `<strong>[${timestamp}]</strong> ${message}`;
+            
+            // Faqat oxirgi 5 ta faollikni saqlash
+            const activities = recentActivity.querySelectorAll('.status-item');
+            if (activities.length >= 5) {
+                activities[0].remove();
+            }
+            
+            recentActivity.appendChild(activityItem);
+        }
+        
+        function getBotName(botId) {
+            const botCard = document.querySelector(`.bot-card[data-bot-id="${botId}"]`);
+            return botCard ? botCard.querySelector('.bot-name').textContent : `Bot ${botId}`;
+        }
+        
+        // Demo ma'lumotlarni ishga tushirish
+        function initializeDemoData() {
+            // Demo botlar qo'shish
+            addBotToList({
+                id: 'demo_bot_1',
+                name: 'Yordamchi Bot',
+                status: 'running',
+                created_at: new Date()
+            });
+            
+            addBotToList({
+                id: 'demo_bot_2',
+                name: 'Mijoz Xizmati',
+                status: 'stopped',
+                created_at: new Date(Date.now() - 86400000)
+            });
+            
+            // Demo status xabarlari
+            addStatusMessage('info', 'Tizim: Dashboard muvaffaqiyatli ishga tushirildi');
+            addStatusMessage('success', 'Yordamchi Bot: Bot ishga tushirildi va Telegramga ulandi');
+            addStatusMessage('info', 'Mijoz Xizmati: Bot foydalanuvchi tomonidan to\'xtatildi');
+            
+            // Statistika yangilash
+            updateStatistics();
+        }
+        
+        // Dasturni ishga tushirish
+        document.addEventListener('DOMContentLoaded', () => {
+            initializeDemoData();
+            // connectWebSocket(); // WebSocket ni haqiqiy backend bo'lganda ishga tushiring
+            loadBots(); // Botlarni yuklash
+        });
+    </script>
+</body>
+</html>
